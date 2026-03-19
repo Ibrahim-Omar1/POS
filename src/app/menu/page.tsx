@@ -1,0 +1,343 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Utensils, Plus, Pencil, Trash2, UtensilsCrossed } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { MenuItem, Category } from "@/types";
+
+export default function MenuPage() {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    categoryId: "",
+    image: "",
+    isAvailable: true,
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      const [menuRes, categoriesRes] = await Promise.all([
+        fetch("/api/menu"),
+        fetch("/api/categories"),
+      ]);
+      const [menuData, categoriesData] = await Promise.all([
+        menuRes.json(),
+        categoriesRes.json(),
+      ]);
+      setMenuItems(menuData);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openAddDialog() {
+    setEditingItem(null);
+    setFormData({
+      name: "",
+      price: "",
+      categoryId: categories[0]?.id.toString() || "",
+      image: "",
+      isAvailable: true,
+    });
+    setDialogOpen(true);
+  }
+
+  function openEditDialog(item: MenuItem) {
+    setEditingItem(item);
+    setFormData({
+      name: item.name,
+      price: item.price.toString(),
+      categoryId: item.categoryId.toString(),
+      image: item.image || "",
+      isAvailable: item.isAvailable,
+    });
+    setDialogOpen(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const url = editingItem ? `/api/menu/${editingItem.id}` : "/api/menu";
+    const method = editingItem ? "PUT" : "POST";
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setDialogOpen(false);
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Error saving item:", error);
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      const response = await fetch(`/api/menu/${id}`, { method: "DELETE" });
+      if (response.ok) {
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+  }
+
+  async function handleToggleAvailable(item: MenuItem) {
+    try {
+      await fetch(`/api/menu/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...item,
+          isAvailable: !item.isAvailable,
+        }),
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error updating item:", error);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-zinc-50">
+        <div className="text-zinc-400">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-50">
+      {/* Navbar */}
+      <nav className="h-16 bg-white border-b border-zinc-100 shadow-sm">
+        <div className="h-full px-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Utensils className="w-6 h-6 text-emerald-500" />
+            <span className="text-xl font-bold">
+              <span className="text-emerald-500">My</span>
+              <span className="text-zinc-800">POS</span>
+            </span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Content */}
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-zinc-800">Menu Management</h1>
+          <Button
+            onClick={openAddDialog}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Item
+          </Button>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead className="w-24">Available</TableHead>
+                <TableHead className="w-24">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {menuItems.map((item) => (
+                <TableRow key={item.id} className="hover:bg-zinc-50">
+                  <TableCell>
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-emerald-50 flex items-center justify-center">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <UtensilsCrossed className="w-4 h-4 text-emerald-300" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell className="text-zinc-500">
+                    {item.category.name}
+                  </TableCell>
+                  <TableCell className="text-emerald-500 font-semibold">
+                    ${item.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={item.isAvailable}
+                      onCheckedChange={() => handleToggleAvailable(item)}
+                      className="data-[state=checked]:bg-emerald-500"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditDialog(item)}
+                        className="text-zinc-400 hover:text-emerald-500 transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-zinc-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? "Edit Item" : "Add New Item"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-zinc-700">Name</label>
+              <Input
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                placeholder="Item name"
+                required
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-700">
+                Category
+              </label>
+              <select
+                value={formData.categoryId}
+                onChange={(e) =>
+                  setFormData({ ...formData, categoryId: e.target.value })
+                }
+                className="mt-1 w-full h-10 px-3 rounded-md border border-zinc-200 bg-white text-sm"
+                required
+              >
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-700">Price</label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.price}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value })
+                }
+                placeholder="0.00"
+                required
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-700">
+                Image URL (optional)
+              </label>
+              <Input
+                value={formData.image}
+                onChange={(e) =>
+                  setFormData({ ...formData, image: e.target.value })
+                }
+                placeholder="https://..."
+                className="mt-1"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.isAvailable}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isAvailable: checked })
+                }
+                className="data-[state=checked]:bg-emerald-500"
+              />
+              <label className="text-sm font-medium text-zinc-700">
+                Available
+              </label>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-emerald-500 hover:bg-emerald-600"
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
