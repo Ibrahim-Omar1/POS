@@ -1,77 +1,88 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/navbar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ItemBrowser } from "@/components/item-browser";
 import { OrderSummary } from "@/components/order-summary";
-import { CartProvider } from "@/hooks/use-cart";
-import { Category, MenuItem } from "@/types";
+import { MenuItem, Category } from "@/types";
 
-export default function Home() {
+export default function Page() {
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [categoriesRes, menuRes] = await Promise.all([
-          fetch("/api/categories"),
+        const [menuRes, categoriesRes] = await Promise.all([
           fetch("/api/menu"),
+          fetch("/api/categories"),
         ]);
 
-        const [categoriesData, menuData] = await Promise.all([
-          categoriesRes.json(),
-          menuRes.json(),
-        ]);
+        if (menuRes.ok) {
+          const menuData = await menuRes.json();
+          setItems(menuData);
+        }
 
-        setCategories(categoriesData);
-        setMenuItems(menuData);
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json();
+          setCategories(categoriesData);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     }
 
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-zinc-50">
-        <div className="text-zinc-400">Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <CartProvider>
-      <div className="h-screen flex flex-col overflow-hidden">
-        {/* Navbar */}
-        <Navbar
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header with breadcrumbs */}
+      <header className="flex h-14 shrink-0 items-center gap-2 px-4 border-b border-zinc-100 bg-white">
+        <SidebarTrigger className="-ml-1" />
+        <div className="mr-2 h-4 w-px bg-border" />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem className="hidden md:block">
+              <BreadcrumbLink href="#">Point of Sale</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="hidden md:block" />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Cashier</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </header>
 
-        {/* Main content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left panel - Item browser (65%) */}
-          <div className="w-[65%] h-full overflow-hidden bg-zinc-50">
-            <ItemBrowser
-              items={menuItems}
-              selectedCategory={selectedCategory}
-            />
-          </div>
+      {/* Main content - Two panel layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left panel - Item browser (65%) */}
+        <div className="flex-[65] overflow-y-auto overflow-x-visible">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-zinc-400">Loading menu...</div>
+            </div>
+          ) : (
+            <ItemBrowser items={items} categories={categories} />
+          )}
+        </div>
 
-          {/* Right panel - Order summary (35%) */}
-          <div className="w-[35%] h-full overflow-hidden">
-            <OrderSummary />
-          </div>
+        {/* Right panel - Order summary (35%) */}
+        <div className="flex-[35] overflow-hidden">
+          <OrderSummary />
         </div>
       </div>
-    </CartProvider>
+    </div>
   );
 }

@@ -3,7 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Utensils, Plus, Pencil, Trash2, UtensilsCrossed } from "lucide-react";
+import { Plus, Pencil, Trash2, UtensilsCrossed } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -138,29 +148,36 @@ export default function MenuPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-zinc-50">
+      <div className="h-screen flex items-center justify-center">
         <div className="text-zinc-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Navbar */}
-      <nav className="h-16 bg-white border-b border-zinc-100 shadow-sm">
-        <div className="h-full px-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Utensils className="w-6 h-6 text-emerald-500" />
-            <span className="text-xl font-bold">
-              <span className="text-emerald-500">My</span>
-              <span className="text-zinc-800">POS</span>
-            </span>
-          </Link>
-        </div>
-      </nav>
+    <div className="flex h-full flex-col">
+      {/* Header with sidebar trigger and breadcrumbs */}
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator
+          orientation="vertical"
+          className="mr-2 data-[orientation=vertical]:h-4"
+        />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem className="hidden md:block">
+              <BreadcrumbLink href="/">Menu Management</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="hidden md:block" />
+            <BreadcrumbItem>
+              <BreadcrumbPage>All Menu Items</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </header>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="flex-1 overflow-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-zinc-800">Menu Management</h1>
           <Button
@@ -208,7 +225,7 @@ export default function MenuPage() {
                     {item.category.name}
                   </TableCell>
                   <TableCell className="text-emerald-500 font-semibold">
-                    ${item.price.toFixed(2)}
+                    {new Intl.NumberFormat("en-EG", { style: "currency", currency: "EGP", minimumFractionDigits: 0 }).format(item.price)}
                   </TableCell>
                   <TableCell>
                     <Switch

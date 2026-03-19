@@ -18,26 +18,24 @@ async function main() {
   await prisma.category.deleteMany();
 
   // Create categories
-  const coffee = await prisma.category.create({ data: { name: "Coffee" } });
-  const pastry = await prisma.category.create({ data: { name: "Pastry" } });
-  const food = await prisma.category.create({ data: { name: "Food" } });
+  const foods = await prisma.category.create({ data: { name: "Foods" } });
+  const beverages = await prisma.category.create({ data: { name: "Beverages" } });
 
-  // Create menu items
+  // Create menu items with EGP prices
   await prisma.menuItem.createMany({
     data: [
-      // Coffee
-      { name: "Espresso", price: 2.5, categoryId: coffee.id },
-      { name: "Americano", price: 3.0, categoryId: coffee.id },
-      { name: "Cappuccino", price: 4.0, categoryId: coffee.id },
-      { name: "Latte", price: 4.5, categoryId: coffee.id },
-      // Pastry
-      { name: "Croissant", price: 3.5, categoryId: pastry.id },
-      { name: "Chocolate Muffin", price: 3.0, categoryId: pastry.id },
-      { name: "Cinnamon Roll", price: 4.0, categoryId: pastry.id },
-      // Food
-      { name: "Avocado Toast", price: 8.5, categoryId: food.id },
-      { name: "Grilled Cheese", price: 7.0, categoryId: food.id },
-      { name: "Caesar Salad", price: 9.0, categoryId: food.id },
+      // Foods
+      { name: "Beef Steak", price: 20000, categoryId: foods.id },
+      { name: "Fried Chicken", price: 19000, categoryId: foods.id },
+      { name: "Japanese Onigiri", price: 30000, categoryId: foods.id },
+      { name: "Kabob Kubideh", price: 31000, categoryId: foods.id },
+      { name: "Mexican Tacos", price: 26000, categoryId: foods.id },
+      { name: "Fried Beef", price: 25000, categoryId: foods.id },
+      { name: "Happy Burger", price: 16000, categoryId: foods.id },
+      { name: "Grilled Salmon", price: 35000, categoryId: foods.id },
+      // Beverages
+      { name: "Fresh Orange Juice", price: 8000, categoryId: beverages.id },
+      { name: "Iced Coffee", price: 12000, categoryId: beverages.id },
     ],
   });
 
