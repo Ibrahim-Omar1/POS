@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { ItemCard } from "@/components/item-card";
 import { MenuItem, Category } from "@/types";
 
@@ -42,8 +42,16 @@ export function ItemBrowser({ items, categories }: ItemBrowserProps) {
           placeholder="Search items..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value || null)}
-          className="w-full pl-10 pr-4 h-10 rounded-lg border border-zinc-200 outline-none bg-zinc-50 text-sm placeholder:text-zinc-400 focus:bg-white focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          className="w-full pl-10 pr-9 h-10 rounded-lg border border-zinc-200 outline-none bg-zinc-50 text-sm placeholder:text-zinc-400 focus:bg-white focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/20 transition-all"
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery(null)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Category filter chips */}
