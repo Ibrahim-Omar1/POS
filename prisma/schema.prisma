@@ -17,6 +17,7 @@ model MenuItem {
   name        String
   price       Float
   image       String?
+  stock       Int?        // Optional stock quantity, null = unlimited
   isAvailable Boolean     @default(true)
   categoryId  Int
   category    Category    @relation(fields: [categoryId], references: [id])
@@ -39,4 +40,13 @@ model OrderItem {
   unitPrice  Float
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model Settings {
+  id          Int      @id @default(1)
+  storeName   String   @default("My POS Store")
+  storePhone  String   @default("")
+  storeAddress String  @default("")
+  currency    String   @default("EGP")
+  updatedAt   DateTime @updatedAt
 }

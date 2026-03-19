@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, price, categoryId, image, isAvailable } = body;
+    const { name, price, categoryId, image, isAvailable, stock } = body;
 
     const item = await prisma.menuItem.create({
       data: {
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
         categoryId: parseInt(categoryId),
         image: image || null,
         isAvailable: isAvailable ?? true,
+        stock: stock !== undefined && stock !== "" ? parseInt(stock) : null,
       },
       include: {
         category: true,

@@ -24,10 +24,13 @@ import {
   Settings,
 } from "lucide-react"
 import { Category } from "@/types"
+import { useSettings } from "@/hooks/use-settings"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const [categories, setCategories] = React.useState<Category[]>([])
+  const { settings } = useSettings()
+  const storeName = settings?.storeName || "My POS"
 
   React.useEffect(() => {
     async function fetchCategories() {
@@ -81,17 +84,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-500 text-white">
-                <Utensils className="size-4" />
-              </div>
-              <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">
-                  <span className="text-emerald-600">My</span>
-                  <span>POS</span>
-                </span>
-                <span className="text-xs text-muted-foreground">Point of Sale</span>
-              </div>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-500 text-white">
+                  <Utensils className="size-4" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-semibold">{storeName}</span>
+                  <span className="text-xs text-muted-foreground">Point of Sale</span>
+                </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -101,22 +103,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu className="gap-2">
             {navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  isActive={pathname === item.url}
-                  render={<Link href={item.url} className="font-medium" />}
-                >
-                  <item.icon className="size-4" />
-                  {item.title}
+                <SidebarMenuButton isActive={pathname === item.url} asChild>
+                  <Link href={item.url} className="font-medium">
+                    <item.icon className="size-4" />
+                    {item.title}
+                  </Link>
                 </SidebarMenuButton>
                 {item.items?.length ? (
                   <SidebarMenuSub className="ml-0 border-l-0 px-1.5">
                     {item.items.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton
-                          isActive={pathname === subItem.url}
-                          render={<Link href={subItem.url} />}
-                        >
-                          {subItem.title}
+                        <SidebarMenuSubButton isActive={pathname === subItem.url} asChild>
+                          <Link href={subItem.url}>
+                            {subItem.title}
+                          </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}

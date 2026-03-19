@@ -1,21 +1,65 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ShoppingBag, Printer, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
+import { useSettings } from "@/hooks/use-settings";
 import Image from "next/image";
 import { UtensilsCrossed } from "lucide-react";
 import { formatPrice } from "@/lib/format";
+import { Order } from "@/types";
+import { buildTextReceiptHtml } from "@/lib/receipt";
 
-export function OrderSummary() {
-  const router = useRouter();
+interface OrderSummaryProps {
+  onOrderPlaced?: () => Promise<void> | void;
+}
+
+export function OrderSummary({ onOrderPlaced }: OrderSummaryProps) {
   const { items, updateQuantity, removeItem, clearCart, getTotal } = useCart();
+  const { settings } = useSettings();
+  const currency = settings?.currency || "EGP";
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const total = getTotal();
   const hasItems = items.length > 0;
 
+  const printOrder = async (order: Order) => {
+    const html = buildTextReceiptHtml(order, settings);
+
+    if (window.electronAPI?.isElectron) {
+      const result = await window.electronAPI.printReceiptHtml({
+        html,
+        title: `Receipt-${order.id}`,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Printing failed");
+      }
+
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=480,height=720");
+    if (!printWindow) {
+      throw new Error("Unable to open print window");
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    setTimeout(() => {
+      printWindow.close();
+    }, 1000);
+  };
+
   const handlePlaceOrder = async () => {
-    if (!hasItems) return;
+    if (!hasItems || isSubmitting) return;
+
+    setError(null);
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/orders", {
@@ -34,12 +78,19 @@ export function OrderSummary() {
       });
 
       if (response.ok) {
-        const order = await response.json();
+        const order = (await response.json()) as Order;
+        await printOrder(order);
         clearCart();
-        router.push(`/receipt/${order.id}`);
+        await onOrderPlaced?.();
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to place order");
       }
     } catch (error) {
       console.error("Error placing order:", error);
+      setError("Failed to place order");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -88,7 +139,7 @@ export function OrderSummary() {
                     {item.name}
                   </p>
                   <p className="text-xs text-zinc-400 font-medium">
-                    {formatPrice(item.price)}
+                    {formatPrice(item.price, currency)}
                   </p>
                   {/* Quantity controls */}
                   <div className="flex items-center gap-2 mt-1">
@@ -107,7 +158,8 @@ export function OrderSummary() {
                       onClick={() =>
                         updateQuantity(item.menuItemId, item.quantity + 1)
                       }
-                      className="w-6 h-6 rounded-md bg-emerald-500 text-white font-bold flex items-center justify-center hover:bg-emerald-600 transition-colors text-xs"
+                      disabled={item.stock !== null && item.quantity >= item.stock}
+                      className="w-6 h-6 rounded-md bg-emerald-500 text-white font-bold flex items-center justify-center hover:bg-emerald-600 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
                     >
                       +
                     </button>
@@ -136,18 +188,25 @@ export function OrderSummary() {
             <span className="text-sm font-semibold text-zinc-600">Total</span>
           </div>
           <span className="text-base font-bold text-zinc-900">
-            {formatPrice(total)}
+            {formatPrice(total, currency)}
           </span>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-3 p-2 rounded-lg bg-red-50 border border-red-200">
+            <p className="text-xs text-red-600">{error}</p>
+          </div>
+        )}
 
         {/* Place order button */}
         <Button
           onClick={handlePlaceOrder}
-          disabled={!hasItems}
+          disabled={!hasItems || isSubmitting}
           className="w-full h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-300"
         >
           <Printer className="w-4 h-4 mr-2" />
-          Place Order & Print
+          {isSubmitting ? "Processing..." : "Place Order & Print"}
         </Button>
         <p className="text-[10px] text-center text-zinc-400 mt-2">
           Receipt will print automatically

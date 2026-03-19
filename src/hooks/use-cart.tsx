@@ -23,6 +23,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((i) => i.menuItemId === item.menuItemId);
       if (existing) {
+        // Check stock limit before incrementing
+        if (item.stock !== null && existing.quantity >= item.stock) {
+          return prev;
+        }
         return prev.map((i) =>
           i.menuItemId === item.menuItemId
             ? { ...i, quantity: i.quantity + 1 }

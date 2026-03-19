@@ -33,6 +33,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MenuItem, Category } from "@/types";
+import { useSettings } from "@/hooks/use-settings";
+import { formatPrice } from "@/lib/format";
 
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -40,12 +42,15 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const { settings } = useSettings();
+  const currency = settings?.currency || "EGP";
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     categoryId: "",
     image: "",
     isAvailable: true,
+    stock: "",
   });
 
   useEffect(() => {
@@ -79,6 +84,7 @@ export default function MenuPage() {
       categoryId: categories[0]?.id.toString() || "",
       image: "",
       isAvailable: true,
+      stock: "",
     });
     setDialogOpen(true);
   }
@@ -91,6 +97,7 @@ export default function MenuPage() {
       categoryId: item.categoryId.toString(),
       image: item.image || "",
       isAvailable: item.isAvailable,
+      stock: item.stock !== null ? item.stock.toString() : "",
     });
     setDialogOpen(true);
   }
@@ -136,7 +143,11 @@ export default function MenuPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...item,
+          name: item.name,
+          price: item.price,
+          categoryId: item.categoryId,
+          image: item.image,
+          stock: item.stock,
           isAvailable: !item.isAvailable,
         }),
       });
@@ -198,6 +209,7 @@ export default function MenuPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead className="w-20">Stock</TableHead>
                 <TableHead className="w-24">Available</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
@@ -225,7 +237,10 @@ export default function MenuPage() {
                     {item.category.name}
                   </TableCell>
                   <TableCell className="text-emerald-500 font-semibold">
-                    {new Intl.NumberFormat("en-EG", { style: "currency", currency: "EGP", minimumFractionDigits: 0 }).format(item.price)}
+                    {formatPrice(item.price, currency)}
+                  </TableCell>
+                  <TableCell className="text-zinc-500">
+                    {item.stock !== null ? item.stock : "∞"}
                   </TableCell>
                   <TableCell>
                     <Switch
@@ -311,6 +326,24 @@ export default function MenuPage() {
                 required
                 className="mt-1"
               />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-700">
+                Stock (optional)
+              </label>
+              <Input
+                type="number"
+                min="0"
+                value={formData.stock}
+                onChange={(e) =>
+                  setFormData({ ...formData, stock: e.target.value })
+                }
+                placeholder="Leave empty for unlimited"
+                className="mt-1"
+              />
+              <p className="text-xs text-zinc-400 mt-1">
+                Leave empty for unlimited stock
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-700">

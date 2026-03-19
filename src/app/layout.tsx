@@ -9,6 +9,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { CartProvider } from "@/hooks/use-cart";
+import { SettingsProvider } from "@/hooks/use-settings";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,20 +30,22 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
         <NuqsAdapter>
-          <CartProvider>
-            <TooltipProvider>
-              <SidebarProvider
-                style={
-                  {
-                    "--sidebar-width": "19rem",
-                  } as React.CSSProperties
-                }
-              >
-                <AppSidebar />
-                <SidebarInset>{children}</SidebarInset>
-              </SidebarProvider>
-            </TooltipProvider>
-          </CartProvider>
+          <SettingsProvider>
+            <CartProvider>
+              <TooltipProvider>
+                <SidebarProvider
+                  style={
+                    {
+                      "--sidebar-width": "19rem",
+                    } as React.CSSProperties
+                  }
+                >
+                  <AppSidebar />
+                  <SidebarInset>{children}</SidebarInset>
+                </SidebarProvider>
+              </TooltipProvider>
+            </CartProvider>
+          </SettingsProvider>
         </NuqsAdapter>
       </body>
     </html>

@@ -1,5 +1,10 @@
 export interface ElectronAPI {
   printReceipt: (options?: { silent?: boolean }) => Promise<{ success: boolean; error?: string }>;
+  printReceiptHtml: (options: {
+    html: string;
+    title?: string;
+    silent?: boolean;
+  }) => Promise<{ success: boolean; error?: string }>;
   getPrinters: () => Promise<Electron.PrinterInfo[]>;
   isElectron: boolean;
 }

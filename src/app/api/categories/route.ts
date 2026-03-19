@@ -7,6 +7,14 @@ export async function GET() {
       orderBy: {
         name: "asc",
       },
+      include: {
+        _count: {
+          select: { items: true },
+        },
+        items: {
+          orderBy: { name: "asc" },
+        },
+      },
     });
     return NextResponse.json(categories);
   } catch (error) {

@@ -8,6 +8,7 @@ export interface MenuItem {
   name: string;
   price: number;
   image: string | null;
+  stock: number | null; // null = unlimited stock
   isAvailable: boolean;
   categoryId: number;
   category: Category;
@@ -20,6 +21,7 @@ export interface CartItem {
   price: number;
   image: string | null;
   quantity: number;
+  stock: number | null; // null = unlimited
 }
 
 export interface OrderItem {
@@ -36,4 +38,13 @@ export interface Order {
   total: number;
   createdAt: string;
   items: OrderItem[];
+}
+
+export interface Settings {
+  id: number;
+  storeName: string;
+  storePhone: string;
+  storeAddress: string;
+  currency: string;
+  updatedAt: string;
 }

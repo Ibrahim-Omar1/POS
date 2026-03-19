@@ -17,32 +17,32 @@ import { MenuItem, Category } from "@/types";
 export default function Page() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function fetchData() {
+    try {
+      const [menuRes, categoriesRes] = await Promise.all([
+        fetch("/api/menu"),
+        fetch("/api/categories"),
+      ]);
+
+      if (menuRes.ok) {
+        const menuData = await menuRes.json();
+        setItems(menuData);
+      }
+
+      if (categoriesRes.ok) {
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [menuRes, categoriesRes] = await Promise.all([
-          fetch("/api/menu"),
-          fetch("/api/categories"),
-        ]);
-
-        if (menuRes.ok) {
-          const menuData = await menuRes.json();
-          setItems(menuData);
-        }
-
-        if (categoriesRes.ok) {
-          const categoriesData = await categoriesRes.json();
-          setCategories(categoriesData);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchData();
   }, []);
 
@@ -80,7 +80,7 @@ export default function Page() {
 
         {/* Right panel - Order summary (35%) */}
         <div className="flex-[35] overflow-hidden">
-          <OrderSummary />
+          <OrderSummary onOrderPlaced={fetchData} />
         </div>
       </div>
     </div>

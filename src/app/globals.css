@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -129,5 +128,22 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Print styles - hide sidebar and adjust layout */
+@media print {
+  [data-slot="sidebar"],
+  [data-sidebar="sidebar"],
+  aside,
+  nav {
+    display: none !important;
+  }
+
+  main,
+  [data-slot="content"] {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 100% !important;
   }
 }

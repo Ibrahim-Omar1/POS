@@ -8,7 +8,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, price, categoryId, image, isAvailable } = body;
+    const { name, price, categoryId, image, isAvailable, stock } = body;
 
     const item = await prisma.menuItem.update({
       where: { id: parseInt(id) },
@@ -18,6 +18,7 @@ export async function PUT(
         categoryId: parseInt(categoryId),
         image: image || null,
         isAvailable,
+        stock: stock !== undefined && stock !== "" ? parseInt(stock) : null,
       },
       include: {
         category: true,
