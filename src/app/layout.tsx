@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -8,7 +9,6 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { CartProvider } from "@/hooks/use-cart";
-import { cn } from "@/lib/utils";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,20 +28,22 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
-        <CartProvider>
-          <TooltipProvider>
-            <SidebarProvider
-              style={
-                {
-                  "--sidebar-width": "19rem",
-                } as React.CSSProperties
-              }
-            >
-              <AppSidebar />
-              <SidebarInset>{children}</SidebarInset>
-            </SidebarProvider>
-          </TooltipProvider>
-        </CartProvider>
+        <NuqsAdapter>
+          <CartProvider>
+            <TooltipProvider>
+              <SidebarProvider
+                style={
+                  {
+                    "--sidebar-width": "19rem",
+                  } as React.CSSProperties
+                }
+              >
+                <AppSidebar />
+                <SidebarInset>{children}</SidebarInset>
+              </SidebarProvider>
+            </TooltipProvider>
+          </CartProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

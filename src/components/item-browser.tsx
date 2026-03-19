@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { Search } from "lucide-react";
 import { ItemCard } from "@/components/item-card";
 import { MenuItem, Category } from "@/types";
@@ -11,8 +12,14 @@ interface ItemBrowserProps {
 }
 
 export function ItemBrowser({ items, categories }: ItemBrowserProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useQueryState(
+    "q",
+    parseAsString.withDefault("")
+  );
+  const [selectedCategory, setSelectedCategory] = useQueryState(
+    "category",
+    parseAsInteger
+  );
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -34,7 +41,7 @@ export function ItemBrowser({ items, categories }: ItemBrowserProps) {
           type="text"
           placeholder="Search items..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value || null)}
           className="w-full pl-10 pr-4 h-10 rounded-lg border border-zinc-200 outline-none bg-zinc-50 text-sm placeholder:text-zinc-400 focus:bg-white focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/20 transition-all"
         />
       </div>
